@@ -14,6 +14,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 const ITEMS_PER_PAGE = 10;
 
 const LeaderboardDisplay: React.FC = () => {
+  // Temporarily disable leaderboard display site-wide while backend is maintained.
+  // Toggle `leaderboardDisabled` to `false` to re-enable the previous behavior.
+  const leaderboardDisabled = true;
+
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +25,13 @@ const LeaderboardDisplay: React.FC = () => {
   const router = useRouter();
 
   useEffect(() => {
+    if (leaderboardDisabled) {
+      // If disabled, bypass network calls and show a friendly message instead.
+      setIsLoading(false);
+      setLeaderboard([]);
+      return;
+    }
+
     const fetchLeaderboard = async () => {
       setIsLoading(true);
       setError(null);
@@ -40,7 +51,7 @@ const LeaderboardDisplay: React.FC = () => {
     };
 
     fetchLeaderboard();
-  }, []);
+  }, [leaderboardDisabled]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -77,7 +88,7 @@ const LeaderboardDisplay: React.FC = () => {
           <CardTitle className="text-3xl text-primary">Leaderboard</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading && (
+            {isLoading && (
             <div className="space-y-2">
               {[...Array(ITEMS_PER_PAGE / 2)].map((_, i) => ( // Show 5 skeleton items
                 <div key={i} className="flex items-center space-x-4 p-2">
@@ -90,10 +101,18 @@ const LeaderboardDisplay: React.FC = () => {
             </div>
           )}
           {error && <p className="text-destructive text-center">{error}</p>}
-          {!isLoading && !error && leaderboard.length === 0 && (
+
+          {leaderboardDisabled && (
+            <div className="py-8 text-center">
+              <p className="text-lg font-medium">Leaderboard temporarily disabled</p>
+              <p className="text-sm text-muted-foreground mt-2">I don got dat typa money</p>
+            </div>
+          )}
+
+          {!leaderboardDisabled && !isLoading && !error && leaderboard.length === 0 && (
             <p className="text-center text-muted-foreground">The leaderboard is empty. Be the first!</p>
           )}
-          {!isLoading && !error && leaderboard.length > 0 && (
+          {!leaderboardDisabled && !isLoading && !error && leaderboard.length > 0 && (
             <>
               <Table>
                 <TableCaption>Top scores in EcoRoam! Showing page {currentPage} of {totalPages}.</TableCaption>
